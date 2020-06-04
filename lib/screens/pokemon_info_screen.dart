@@ -18,7 +18,7 @@ class PokemonInfoScreen extends StatefulWidget {
 
 class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
   Map pokemonInformation = {};
-  List evolutionData = [];
+  Map evolutionChain = {};
 
   void getPokemonInformation() async {
     http.Response response;
@@ -42,25 +42,26 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
   void getEvolutionData() async {
     String speciesURL = pokemonInformation['species']['url'];
     http.Response speciesResponse;
-    try{
+    try {
       speciesResponse = await http.get(speciesURL);
       if (speciesResponse.statusCode == 200) {
-        String evolutionURL = jsonDecode(speciesResponse.body)['evolution_chain']['url'];
+        String evolutionURL =
+            jsonDecode(speciesResponse.body)['evolution_chain']['url'];
         http.Response evolutionChainResponse;
-        try{
+        try {
           evolutionChainResponse = await http.get(evolutionURL);
-          if(evolutionChainResponse.statusCode == 200) {
+          if (evolutionChainResponse.statusCode == 200) {
             setState(() {
-              evolutionData = jsonDecode(evolutionChainResponse.body)['chain']['evolves_to'][0]['evolves_to'];
+              evolutionChain = jsonDecode(evolutionChainResponse.body)['chain'];
             });
           } else {
-            print("Can't get Evolution: Status Code: ${evolutionChainResponse.statusCode}");
+            print(
+                "Can't get Evolution: Status Code: ${evolutionChainResponse.statusCode}");
           }
         } catch (e) {
           print(e);
         }
-      }
-      else{
+      } else {
         print("Can't get Species: Status Code: ${speciesResponse.statusCode}");
       }
     } catch (e) {
@@ -70,24 +71,26 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
 
   List<Widget> getTypes() {
     List<Widget> typeList = [];
-    for (Map type in pokemonInformation['types']){
-      typeList.add(SizedBox(width: 15,));
+    for (Map type in pokemonInformation['types']) {
+      typeList.add(SizedBox(
+        width: 15,
+      ));
       typeList.add(
         Image.asset(
-          'images/${type['type']['name']}.png',
+          'images/pokemonTypes/${type['type']['name']}.png',
           height: 25,
         ),
       );
     }
-    typeList.add(SizedBox(width: 15,));
+    typeList.add(SizedBox(
+      width: 15,
+    ));
     return typeList;
   }
 
   List<Widget> getStats() {
     List<Widget> statList = [];
     for (Map stat in pokemonInformation['stats']) {
-      int baseStat;
-      String statName;
 
       const int maxStat = 200;
       final double statRank = (stat['base_stat'] *
@@ -103,6 +106,7 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
           return Colors.red.shade600;
         }
       }
+
       statList.add(Container(
         padding: EdgeInsets.symmetric(vertical: 6),
         width: MediaQuery.of(context).size.width * .45,
@@ -143,14 +147,15 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
   List<Widget> getAbilities() {
     List<Widget> abilitiesList = [];
 
-    for (Map ability in pokemonInformation['abilities']){
+    for (Map ability in pokemonInformation['abilities']) {
       Widget newCard = Card(
+        color: kPokemonTileButtonBackgroundColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
         ),
         child: ListTile(
           title: Text((ability['ability']['name']).toUpperCase()),
-          trailing: ability['is_hidden']? Text('Hidden') : Text(''),
+          trailing: ability['is_hidden'] ? Text('Hidden') : Text(''),
         ),
       );
       abilitiesList.add(newCard);
@@ -161,9 +166,9 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
 
   List<Widget> getMoves() {
     List<Widget> movesList = [];
-
-    for (Map move in pokemonInformation['moves']){
+    for (Map move in pokemonInformation['moves']) {
       Widget newCard = Card(
+        color: kPokemonTileButtonBackgroundColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
         ),
@@ -178,27 +183,110 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
 
   List<Widget> getEvolution() {
     List<Widget> evolutionForms = [];
-    for (Map form in evolutionData) {
-      String name = form['species']['name'];
-      String id = form['species']['url'];
+    String name;
+    String id;
+    Widget species;
+
+    //1st species
+    name = evolutionChain['species']['name'];
+    id = evolutionChain['species']['url'];
+    id = id.replaceAll('https://pokeapi.co/api/v2/pokemon-species/', '');
+    id = id.replaceAll('/', '');
+    species = Container(
+              child: Card(
+                color: kPokemonTileButtonBackgroundColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  children: <Widget>[
+                    Image.network(kIconUrl + '$id.png'),
+                    Text(name.toUpperCase()),
+                  ],
+                ),
+              ),
+            );
+    evolutionForms.add(species);
+
+    //2nd species
+    name = evolutionChain['evolves_to'][0]['species']['name'];
+    id = evolutionChain['evolves_to'][0]['species']['url'];
+    id = id.replaceAll('https://pokeapi.co/api/v2/pokemon-species/', '');
+    id = id.replaceAll('/', '');
+    species = Container(
+      child: Card(
+        color: kPokemonTileButtonBackgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: <Widget>[
+            Image.network(kIconUrl + '$id.png'),
+            Text(name.toUpperCase()),
+          ],
+        ),
+      ),
+    );
+    evolutionForms.add(species);
+
+    //3rd species
+    List thirdSpecies = evolutionChain['evolves_to'][0]['evolves_to'];
+    List<Widget> thirdRow = [];
+    for (Map item in thirdSpecies) {
+      name = item['species']['name'];
+      id = item['species']['url'];
       id = id.replaceAll('https://pokeapi.co/api/v2/pokemon-species/', '');
       id = id.replaceAll('/', '');
 
-      Widget evolutionForm = Container(
-        child: Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            children: <Widget>[
-              Image.network(kIconUrl + '$id.png'),
-              Text(name.toUpperCase()),
-            ],
-          ),
-        ),
-      );
-      evolutionForms.add(evolutionForm);
+      thirdRow.add(Column(
+        children: <Widget>[
+          Image.network(kIconUrl + '$id.png'),
+          Text(name.toUpperCase()),
+        ],
+      ));
     }
+
+    species = Container(
+      child: Card(
+        color: kPokemonTileButtonBackgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: thirdRow,
+        ),
+      ),
+    );
+    evolutionForms.add(species);
+
+
+//    for (Map form in evolutionChain) {
+//      String name = form['name'];
+//      print(name);
+//      String id = form['species']['url'];
+//      id = id.replaceAll('https://pokeapi.co/api/v2/pokemon-species/', '');
+//      id = id.replaceAll('/', '');
+//
+//      Widget evolutionForm = name != pokemonInformation['name']
+//          ? Container(
+//              child: Card(
+//                color: kPokemonTileButtonBackgroundColor,
+//                shape: RoundedRectangleBorder(
+//                  borderRadius: BorderRadius.circular(10),
+//                ),
+//                child: Column(
+//                  children: <Widget>[
+//                    Image.network(kIconUrl + '$id.png'),
+//                    Text(name.toUpperCase()),
+//                  ],
+//                ),
+//              ),
+//            )
+//          : Container();
+//      evolutionForms.add(evolutionForm);
+//    }
+
     return evolutionForms;
   }
 
@@ -210,12 +298,10 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('build');
-//    pokemonInformation.isNotEmpty ? getEvolutionData() : null;
     return Scaffold(
-      backgroundColor: Color(0xffe8e4d8),
+      backgroundColor: kBackgroundUIColor,
       appBar: AppBar(
-        backgroundColor: Colors.blueGrey[900],
+        backgroundColor: kAppBarBackgroundColor,
         title: Text(
           widget.name.toUpperCase(),
         ),
@@ -247,7 +333,7 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: evolutionData.isNotEmpty ? getTypes() : [],
+                        children: evolutionChain.isNotEmpty ? getTypes() : [],
                       ),
                     ],
                   ),
@@ -276,7 +362,8 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
                   children: <Widget>[
                     TabBar(
                       isScrollable: true,
-                      indicatorColor: Color(0xffe8e4d8),
+                      indicatorColor: kPokemonTileButtonBackgroundColor,
+                      labelColor: kPokemonTileButtonBackgroundColor,
                       tabs: <Widget>[
                         Tab(
                           text: 'About',
@@ -300,21 +387,27 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
                             margin: EdgeInsets.all(8),
                             padding: EdgeInsets.symmetric(horizontal: 8),
                             child: ListView(
-                              children: pokemonInformation.isNotEmpty ? getAbilities() : [],
+                              children: pokemonInformation.isNotEmpty
+                                  ? getAbilities()
+                                  : [],
                             ),
                           ),
                           Container(
                             margin: EdgeInsets.all(8),
                             padding: EdgeInsets.symmetric(horizontal: 8),
                             child: ListView(
-                              children: pokemonInformation.isNotEmpty ? getMoves() : [],
+                              children: pokemonInformation.isNotEmpty
+                                  ? getMoves()
+                                  : [],
                             ),
                           ),
                           Container(
                             margin: EdgeInsets.all(8),
                             padding: EdgeInsets.symmetric(horizontal: 8),
                             child: ListView(
-                              children: pokemonInformation.isNotEmpty ? getEvolution() : [],
+                              children: evolutionChain.isNotEmpty
+                                  ? getEvolution()
+                                  : [],
                             ),
                           ),
                         ],
@@ -330,7 +423,3 @@ class _PokemonInfoScreenState extends State<PokemonInfoScreen> {
     );
   }
 }
-
-
-
-
