@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:pokedex/utilities/constants.dart';
 
-class AboutCard extends StatelessWidget {
-  const AboutCard({
+class InformationViewCard extends StatelessWidget {
+  const InformationViewCard({
     Key key,
-    @required this.trailing,
-    @required this.label,
+    this.trailing,
+    this.title,
   }) : super(key: key);
 
   final Widget trailing;
-  final String label;
+  final Widget title;
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: kPokemonTileButtonBackgroundColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
       ),
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListTile(
-        title: Text(label),
+        title: title,
         trailing: trailing,
       ),
     );

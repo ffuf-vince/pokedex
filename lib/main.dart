@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
-import 'screens/pokemon_info_screen.dart';
+import 'feature/home/home_page.dart';
 
 
 void main() => runApp(MyApp());
@@ -13,7 +12,7 @@ class MyApp extends StatelessWidget {
       title: 'Pokedex',
       theme: ThemeData(
       ),
-      home: HomeScreen(),
+      home: HomePage(),
     );
   }
 }

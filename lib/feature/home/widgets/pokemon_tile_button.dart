@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pokedex/screens/pokemon_info_screen.dart';
+import 'package:pokedex/feature/information/pokemon_info_page.dart';
 import 'package:pokedex/utilities/constants.dart';
 
 class PokemonTileButton extends StatelessWidget {
@@ -23,7 +23,7 @@ class PokemonTileButton extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PokemonInfoScreen(
+            builder: (context) => PokemonInfoPage(
               name: pokemonList.elementAt(nameIndex)['name'],
               url: pokemonList.elementAt(nameIndex)['url'],
             ),
