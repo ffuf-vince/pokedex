@@ -1,21 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:pokedex/feature/information/pokemon_info_page.dart';
+import 'package:pokedex/apis/pokemonapi/models/pokemon_model.dart';
+import 'package:pokedex/feature/home/widgets/pokemon_tile_button.dart';
+import 'package:pokedex/utilities/extensions.dart';
 
 class PokemonSearch extends SearchDelegate<String> {
+  PokemonSearch({required this.list});
 
-  PokemonSearch({@required this.list});
+  final List<Pokemon> list;
 
-  final List list;
+  @override
+  ThemeData appBarTheme(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.copyWith(
+      primaryColor: theme.primaryColor,
+      primaryIconTheme: theme.primaryIconTheme,
+      brightness: theme.brightness,
+      primaryTextTheme: theme.primaryTextTheme,
+    );
+  }
 
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: Icon(Icons.clear),
+        icon: Icon(Icons.clear, color: Theme.of(context).iconTheme.color),
         onPressed: () {
           query = '';
         },
-      )
+      ),
     ];
   }
 
@@ -24,43 +36,54 @@ class PokemonSearch extends SearchDelegate<String> {
     return IconButton(
       icon: const Icon(Icons.arrow_back),
       onPressed: () {
-        close(context, null);
+        close(context, '');
       },
     );
   }
 
   @override
   Widget buildResults(BuildContext context) {
-    return null;
+    final resultList =
+        query.isEmpty ? <Pokemon>[] : list.where((pokemon) => pokemon.name?.startsWith(query) == true).toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GridView.count(
+        crossAxisCount: 2,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 5 / 4,
+        children: List.generate(resultList.length, (index) {
+          return PokemonTileButton(
+            key: GlobalKey(),
+            pokemon: resultList.elementAt(index),
+            imageIndex: resultList.elementAt(index).url?.pokeID ?? '',
+          );
+        }),
+      ),
+    );
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    final suggestionList = query.isEmpty
-        ? []
-        : list
-        .where((pokemon) => pokemon['name'].startsWith(query))
-        .toList();
+    final suggestionList =
+        query.isEmpty ? <Pokemon>[] : list.where((pokemon) => pokemon.name?.startsWith(query) == true).toList();
 
-    return ListView.builder(
-      itemCount: suggestionList.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PokemonInfoPage(
-                  name: suggestionList.elementAt(index)['name'],
-                  url: suggestionList.elementAt(index)['url'],
-                ),
-              ),
-            );
-          },
-          leading: Image.asset('images/pokeball.png', width: 30, height: 30),
-          title: Text(suggestionList.elementAt(index)['name'].toUpperCase()),
-        );
-      },
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GridView.count(
+        crossAxisCount: 2,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 5 / 4,
+        children: List.generate(suggestionList.length, (index) {
+          return PokemonTileButton(
+            key: GlobalKey(),
+            pokemon: suggestionList.elementAt(index),
+            imageIndex: suggestionList.elementAt(index).url?.pokeID ?? '',
+          );
+        }),
+      ),
     );
   }
 }

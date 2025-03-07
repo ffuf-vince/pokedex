@@ -1,22 +1,15 @@
-import 'package:flutter/material.dart';
-import 'feature/home/home_page.dart';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'utilities/app_starter.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.dumpErrorToConsole(details);
+    if (kReleaseMode) {
+      exit(1);
+    }
+  };
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pokedex',
-      theme: ThemeData(
-      ),
-      home: HomePage(),
-    );
-  }
+  return appStarter();
 }
-
-
-
-

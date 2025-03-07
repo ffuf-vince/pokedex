@@ -1,92 +1,58 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:pokedex/utilities/constants.dart';
-import 'package:pokedex/apis/pokemonapi/pokemon_information_model.dart';
-import 'widgets/pokemon_profile.dart';
-import 'widgets/pokemon_details.dart';
+import 'package:pokedex/feature/information/widgets/bottom_part.dart';
+import 'package:pokedex/feature/information/widgets/upper_part.dart';
+import 'package:pokedex/utilities/color.dart';
+import 'package:pokedex/utilities/extensions.dart';
 
-class PokemonInfoPage extends StatefulWidget {
-  PokemonInfoPage({@required this.name, @required this.url});
+class PokemonInfoPage extends StatelessWidget {
+  final Color backgroundColor;
+  final Map<String, dynamic> evolutionChain;
+  final Map<String, dynamic> pokemonInfo;
 
-  static const String id = 'pokemon_info_screen';
-  final String name;
-  final String url;
-
-  @override
-  _PokemonInfoPageState createState() => _PokemonInfoPageState();
-}
-
-class _PokemonInfoPageState extends State<PokemonInfoPage> {
-  Map pokemonInformation = {};
-  Map evolutionChain = {};
-
-  void getPokemonInformation() async {
-    try {
-      Map tempPokeInfo =
-          await PokemonInformationModel.getInformation(widget.url);
-      Map tempChain =
-          await PokemonInformationModel.getEvolutionData(tempPokeInfo);
-      setState(() {
-        pokemonInformation = tempPokeInfo;
-        evolutionChain = tempChain;
-      });
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  @override
-  void initState() {
-    getPokemonInformation();
-    super.initState();
-  }
+  const PokemonInfoPage({
+    required this.backgroundColor,
+    required this.evolutionChain,
+    required this.pokemonInfo,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBackgroundUIColor,
       appBar: AppBar(
-        backgroundColor: kAppBarBackgroundColor,
-        title: Text(
-          widget.name.toUpperCase(),
+        elevation: 0,
+        backgroundColor: backgroundColor,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Expanded(
-            child: PokemonProfile(
-              backgroundImage: pokemonInformation.isEmpty
-                  ? AssetImage('images/placeholder.png')
-                  : NetworkImage(
-                      pokemonInformation['sprites']['front_default']),
-              type: pokemonInformation.isNotEmpty
-                  ? PokemonInformationModel.getTypes(pokemonInformation)
-                  : [],
-              stats: pokemonInformation.isNotEmpty
-                  ? PokemonInformationModel.getStats(pokemonInformation,
-                      (MediaQuery.of(context).size.width * .45))
-                  : [],
+      body: SafeArea(
+        bottom: false,
+        child: Stack(
+          alignment: AlignmentDirectional.topCenter,
+          children: [
+            Column(
+              children: [
+                Expanded(child: UpperPart(pokemonInformation: pokemonInfo, color: backgroundColor)),
+                Expanded(
+                  child: BottomPart(
+                    color: backgroundColor,
+                    pokemonInformation: pokemonInfo,
+                    evolutionChain: evolutionChain,
+                  ),
+                ),
+              ],
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: PokemonDetails(
-              about: pokemonInformation.isNotEmpty
-                  ? PokemonInformationModel.getAbout(pokemonInformation)
-                  : [],
-              abilities: pokemonInformation.isNotEmpty
-                  ? PokemonInformationModel.getAbilities(pokemonInformation)
-                  : [],
-              moves: pokemonInformation.isNotEmpty
-                  ? PokemonInformationModel.getMoves(pokemonInformation)
-                  : [],
-              evolution: evolutionChain.isNotEmpty
-                  ? PokemonInformationModel.getEvolution(evolutionChain)
-                  : [],
+            Positioned(
+              bottom: MediaQuery.of(context).size.height * 0.5,
+              child: Image.network(pokemonInfo.imageUrl, width: 200, height: 200),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
